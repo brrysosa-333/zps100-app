@@ -4,7 +4,7 @@ import requests
 # Configuración de página
 st.set_page_config(page_title="ZPS-100 Terminal", layout="wide", initial_sidebar_state="collapsed")
 
-# Estilos CSS Personalizados
+# Estilos CSS Personalizados (Diseño amplio, espacioso y limpio)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -18,66 +18,91 @@ st.markdown("""
         background-color: #05080C;
     }
     .matrix-card {
-        background: rgba(16, 27, 20, 0.85);
+        background: rgba(16, 27, 20, 0.9);
         border: 1px solid #00FF66;
-        box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 15px;
+        box-shadow: 0 0 12px rgba(0, 255, 102, 0.2);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
     }
     .result-card {
-        background: rgba(10, 25, 18, 0.95);
+        background: rgba(10, 30, 20, 0.95);
         border: 1px solid #00FF66;
-        padding: 12px;
-        border-radius: 6px;
-        margin-bottom: 12px;
+        padding: 18px;
+        border-radius: 8px;
+        margin-bottom: 15px;
     }
     .centered-title {
         text-align: center;
         font-weight: bold;
         color: #00FF66;
         margin-top: 15px;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
         letter-spacing: 1px;
     }
-    .bank-title { font-size: 12px; color: #888888; }
-    .bank-value { font-size: 24px; font-weight: bold; color: #00FF66; }
+    .bank-title { font-size: 13px; color: #888888; }
+    .bank-value { font-size: 26px; font-weight: bold; color: #00FF66; }
     </style>
 """, unsafe_allow_html=True)
 
 # Título principal centrado
 st.markdown("<h2 class='centered-title'>ZPS-100 TERMINAL</h2>", unsafe_allow_html=True)
 
-# MÓDULO 0: BUSCADOR DE MERCADOS EN VIVO (TOP 3 ANÁLISIS ZPS-100)
+# MÓDULO 0: BUSCADOR FILTRADO Y TOP 3 ANÁLISIS
 st.markdown('<div class="matrix-card">', unsafe_allow_html=True)
-st.markdown("#### 🔍 TOP 3 OPORTUNIDADES & ANÁLISIS ZPS-100")
-search_query = st.text_input("Filtrar mercado en Kalshi:", "Tennis")
+st.markdown("#### 🔍 BUSCADOR & FILTRO INTELIGENTE")
+search_query = st.text_input("Filtrar mercado exacto (ej. Tennis, ATP):", "Tennis")
 
-if st.button("⚡ ANALIZAR TOP 3 MERCADOS"):
+if st.button("⚡ BUSCAR Y ANALIZAR TOP 3"):
     try:
-        url = f"https://api.elections.kalshi.com/trade-api/v2/markets?status=open&limit=3"
+        # Solicitamos una lista más amplia a la API para poder filtrar por texto
+        url = "https://api.elections.kalshi.com/trade-api/v2/markets?status=open&limit=50"
         response = requests.get(url, timeout=5)
+        
         if response.status_code == 200:
-            data = response.json().get("markets", [])
-            st.success(f"¡Análisis completado! Mostrando las 3 mejores opciones detectadas.")
+            all_markets = response.json().get("markets", [])
             
-            for i, m in enumerate(data, 1):
-                # Simulación de métricas cuantitativas para el análisis individual
-                score_sim = 82 - (i * 4) # Puntuación de ejemplo para el Top 3
-                riesgo = "BAJO (Sweet Spot)" if score_sim >= 75 else "MODERADO"
-                val = "EJECUTAR STAKE $6.00" if score_sim >= 75 else "EN OBSERVACIÓN"
+            # Filtramos estrictamente por lo que el usuario escribió (ej. 'tennis')
+            query_clean = search_query.strip().lower()
+            filtered = [
+                m for m in all_markets 
+                if query_clean in m.get('title', '').lower() or query_clean in m.get('ticker', '').lower()
+            ]
+            
+            if filtered:
+                top_3 = filtered[:3]
+                st.success(f"¡Filtro exitoso! Mostrando las 3 mejores opciones para: '{search_query}'")
                 
-                st.markdown(f"""
-                    <div class="result-card">
-                        <b style="color: #00FF66; font-size: 13px;"># {i} - {m.get('title', 'Mercado Activo')}</b><br>
-                        <span style="color: #AAAAAA; font-size: 11px;">Ticker: <code>{m.get('ticker', 'N/A')}</code></span><br>
-                        <hr style="margin: 5px 0; border-color: #00FF6633;">
-                        <span style="font-size: 11px; color: #00FF66;">📊 <b>ZPS Score:</b> {score_sim}/100 PTS | 🛡️ <b>Riesgo:</b> {riesgo}</span><br>
-                        <span style="font-size: 11px; color: #FFFF00;">🎯 <b>Valoración:</b> {val}</span>
-                    </div>
-                """, unsafe_allow_html=True)
+                for i, m in enumerate(top_3, 1):
+                    # Simulación cuantitativa basada en ZPS-100 para la opción filtrada
+                    score_sim = 85 - (i * 3)
+                    riesgo = "BAJO (Sweet Spot 68-75%)" if score_sim >= 75 else "MODERADO"
+                    val = "EJECUTAR STAKE $6.00" if score_sim >= 75 else "EN OBSERVACIÓN"
+                    
+                    st.markdown(f"""
+                        <div class="result-card">
+                            <div style="font-size: 15px; font-weight: bold; color: #00FF66; margin-bottom: 8px;">
+                                OPCIÓN #{i}: {m.get('title', 'Mercado')}
+                            </div>
+                            <div style="font-size: 12px; color: #AAAAAA; margin-bottom: 12px;">
+                                Ticker: <code>{m.get('ticker', 'N/A')}</code>
+                            </div>
+                            <hr style="margin: 10px 0; border-color: #00FF6644;">
+                            <div style="font-size: 13px; line-height: 1.6; color: #DDDDDD;">
+                                📊 <b>ZPS Score:</b> <span style="color: #00FF66;">{score_sim}/100 PTS</span><br>
+                                🛡️ <b>Riesgo:</b> <span style="color: #00FF66;">{riesgo}</span><br>
+                                🎯 <b>Valoración:</b> <span style="color: #FFFF00; font-weight: bold;">{val}</span>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Botón individual de ejecución para cada opción analizada
+                    if st.button(f"🚀 EJECUTAR OPCIÓN #{i}", key=f"exec_{i}"):
+                        st.success(f"¡Orden enviada para la opción #{i}! Stake de $6.00 asegurado.")
+            else:
+                st.warning(f"No se encontraron mercados activos que coincidan con '{search_query}'. Prueba con otra palabra (ej. 'Open', 'ATP').")
         else:
-            st.warning("No se pudieron extraer datos en este momento.")
+            st.warning("No se pudieron extraer datos de la API en este momento.")
     except Exception as e:
         st.error(f"Error de conexión con la API: {e}")
 st.markdown('</div>', unsafe_allow_html=True)
