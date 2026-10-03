@@ -3,10 +3,45 @@ import pandas as pd
 import requests
 
 # Configuración de página
-st.set_page_config(page_title="ZPS-100 | Kalshi Scanner", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(
+    page_title="ZPS-100 | Escáner Kalshi",
+    page_icon="🛡️",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# Estilos CSS oscuros y botones visuales
+st.markdown("""
+<style>
+    .stApp {
+        background-color: #0e1117;
+    }
+    .badge-execute {
+        background-color: #064e3b;
+        color: #34d399;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+    .badge-monitor {
+        background-color: #78350f;
+        color: #fbbf24;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+    .badge-discard {
+        background-color: #7f1d1d;
+        color: #fca5a5;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 st.title("🛡️ Escáner ZPS-100 (Kalshi Live)")
-st.caption("Búsqueda inteligente y filtrado automático de oportunidades según el algoritmo ZPS-100.")
+st.caption("Filtrado cuantitativo de oportunidades según rango de probabilidad (68% - 75%).")
 
 STAKE_FIJO = 6.00
 
@@ -14,13 +49,15 @@ def calcular_zps(prob, volume, hours_left, category):
     # 1. Probabilidad Implícita (Max 40 pts)
     if 70 <= prob <= 73:
         p_score = 40
+        p_status = "Aceptable Óptimo"
     elif (68 <= prob < 70) or (73 < prob <= 75):
         p_score = 30
+        p_status = "Aceptable Limítrofe"
     else:
-        return 0, "🔴 DESCARTAR (<68% o >75%)"
+        return 0, "🔴 DESCARTAR", "Fuera de Rango (<68% o >75%)"
     
     # 2. Liquidez y Volumen (Max 25 pts)
-    if category.lower() in ["climate", "weather"]:
+    if category.lower() in ["climate", "weather", "clima"]:
         l_score = 25 if volume >= 8000 else (15 if volume >= 3000 else 0)
     else:
         l_score = 25 if volume >= 50000 else (15 if volume >= 10000 else 0)
@@ -34,13 +71,13 @@ def calcular_zps(prob, volume, hours_left, category):
     total = p_score + l_score + t_score + v_score
     
     if total >= 80:
-        status = "🟢 EJECUTAR ($6.00)"
+        status = "🟢 EJECUTAR"
     elif total >= 65:
         status = "🟡 MONITOREAR"
     else:
         status = "🔴 DESCARTAR"
         
-    return total, status
+    return total, status, p_status
 
 @st.cache_data(ttl=60)
 def fetch_kalshi_markets():
@@ -54,21 +91,45 @@ def fetch_kalshi_markets():
         st.error(f"Error de conexión con Kalshi: {e}")
         return []
 
-# --- BARRA DE BÚSQUEDA Y FILTROS ---
-st.subheader("🔍 Buscador de Mercados")
-col_search, col_min_score = st.columns([3, 1])
+# --- GUÍA VISUAL DE PROBABILIDAD ---
+st.markdown("### 📊 Clasificación por Probabilidad y Puntuación")
+c1, c2, c3 = st.columns(3)
+with c1:
+    st.info("**🟢 ACEPTABLE / EJECUTAR**\n\nProbabilidad: **70% - 73%** (Óptimo)\nPuntos: **≥ 80 PTS**\nStake: **$6.00 USD**")
+with c2:
+    st.warning("**🟡 MONITOREAR**\n\nProbabilidad: **68%-69%** o **74%-75%**\nPuntos: **65 - 79 PTS**\nStake: **$0.00 USD (Esperar)**")
+with c3:
+    st.error("**🔴 RECHAZAR / DESCARTAR**\n\nProbabilidad: **< 68%** o **> 75%**\nPuntos: **< 65 PTS**\nStake: **$0.00 USD (Abortar)**")
 
-with col_search:
-    search_query = st.text_input("🔎 Buscar por equipo, jugador, liga o categoría:", placeholder="Ej: Sakkari, Boca, Tenis, LaLiga...")
+# --- BUSCADOR Y FILTROS POR BOTÓN ---
+st.markdown("---")
+st.subheader("🔍 Filtro de Mercados")
 
-with col_min_score:
-    min_score = st.number_input("Puntuación mínima (PTS):", min_value=0, max_value=100, value=65, step=5)
+search_query = st.text_input("🔎 Equipo, jugador, deporte o liga:", placeholder="Ej: Tennis, Sakkari, Soccer, Fed...")
 
-# Cargar datos
+st.write("**Filtrar rápido por estado:**")
+col_f1, col_f2, col_f3, col_f4 = st.columns(4)
+
+filter_state = "TODOS"
+with col_f1:
+    if st.button("🟢 Solo Ejecutar"):
+        filter_state = "EJECUTAR"
+with col_f2:
+    if st.button("🟡 Solo Monitorear"):
+        filter_state = "MONITOREAR"
+with col_f3:
+    if st.button("🔴 Solo Descartar"):
+        filter_state = "DESCARTAR"
+with col_f4:
+    if st.button("🌐 Ver Todos"):
+        filter_state = "TODOS"
+
 raw_markets = fetch_kalshi_markets()
 
 if raw_markets:
     parsed_results = []
+    query_clean = search_query.strip().lower()
+    
     for m in raw_markets:
         ticker = m.get("ticker", "")
         title = m.get("title", "")
@@ -77,25 +138,31 @@ if raw_markets:
         yes_price = m.get("last_price") or m.get("yes_bid") or 0
         prob = float(yes_price)
         volume = float(m.get("volume", 0))
-        hours_left = 24  # Ajuste base para eventos activos
+        hours_left = 24
         
-        score, status = calcular_zps(prob, volume, hours_left, category)
+        score, status, p_status = calcular_zps(prob, volume, hours_left, category)
         
-        # Filtro de búsqueda textual en tiempo real
-        match_text = (
-            search_query.lower() in title.lower() or 
-            search_query.lower() in ticker.lower() or 
-            search_query.lower() in category.lower()
-        )
+        # Filtro de texto
+        match_text = True if not query_clean else (query_clean in title.lower() or query_clean in ticker.lower())
         
-        if match_text and score >= min_score:
+        # Filtro por botón de estado
+        match_status = True
+        if filter_state == "EJECUTAR":
+            match_status = "🟢" in status
+        elif filter_state == "MONITOREAR":
+            match_status = "🟡" in status
+        elif filter_state == "DESCARTAR":
+            match_status = "🔴" in status
+            
+        if match_text and match_status:
             parsed_results.append({
-                "Estatus": status,
+                "Dictamen": status,
+                "Rango Probabilidad": p_status,
+                "Probabilidad Implícita": f"{prob:.0f}%",
                 "Score ZPS": score,
-                "Mercado / Evento": title,
-                "Probabilidad": f"{prob:.0f}%",
-                "Volumen ($)": f"${volume:,.0f}",
-                "Stake Recomendado": f"${STAKE_FIJO:.2f} USD" if score >= 80 else "$0.00 USD",
+                "Mercado": title,
+                "Volumen": f"${volume:,.0f}",
+                "Stake": f"${STAKE_FIJO:.2f} USD" if "🟢" in status else "$0.00 USD",
                 "Ticker": ticker
             })
             
@@ -103,11 +170,8 @@ if raw_markets:
         df = pd.DataFrame(parsed_results)
         df = df.sort_values(by="Score ZPS", ascending=False)
         
-        st.success(f"Se encontraron **{len(df)}** mercado(s) coincidente(s).")
+        st.success(f"Se encontraron **{len(df)}** mercados.")
         st.dataframe(df, use_container_width=True, hide_index=True)
     else:
-        st.warning("No se encontraron mercados que coincidan con la búsqueda o el puntaje mínimo seleccionado.")
-else:
-    st.info("Obteniendo mercados activos de Kalshi...")
-    
-  
+        st.warning("No se encontraron mercados con el filtro o estado seleccionado.")
+        
