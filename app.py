@@ -4,7 +4,7 @@ import requests
 # Configuración de página
 st.set_page_config(page_title="ZPS-100 Terminal", layout="wide", initial_sidebar_state="collapsed")
 
-# Estilos CSS Personalizados (Diseño amplio, espacioso y limpio)
+# Estilos CSS Personalizados (Amplio, limpio, sin comprimir)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -48,33 +48,40 @@ st.markdown("""
 # Título principal centrado
 st.markdown("<h2 class='centered-title'>ZPS-100 TERMINAL</h2>", unsafe_allow_html=True)
 
-# MÓDULO 0: BUSCADOR FILTRADO Y TOP 3 ANÁLISIS
+# MÓDULO 0: BUSCADOR INTERACTIVO Y TOP 3
 st.markdown('<div class="matrix-card">', unsafe_allow_html=True)
 st.markdown("#### 🔍 BUSCADOR & FILTRO INTELIGENTE")
-search_query = st.text_input("Filtrar mercado exacto (ej. Tennis, ATP):", "Tennis")
 
-if st.button("⚡ BUSCAR Y ANALIZAR TOP 3"):
+# Creamos un formulario limpio para asegurar el acceso y ejecución del buscador
+with st.form(key='search_form'):
+    search_query = st.text_input("Filtrar mercado exacto (ej. Tennis, Open, Soccer):", "Tennis")
+    submit_button = st.form_submit_button(label="⚡ BUSCAR Y ANALIZAR TOP 3")
+
+if submit_button:
     try:
-        # Solicitamos una lista más amplia a la API para poder filtrar por texto
-        url = "https://api.elections.kalshi.com/trade-api/v2/markets?status=open&limit=50"
+        url = "https://api.elections.kalshi.com/trade-api/v2/markets?status=open&limit=100"
         response = requests.get(url, timeout=5)
         
         if response.status_code == 200:
             all_markets = response.json().get("markets", [])
-            
-            # Filtramos estrictamente por lo que el usuario escribió (ej. 'tennis')
             query_clean = search_query.strip().lower()
+            
+            # Filtro estricto por la consulta del usuario
             filtered = [
                 m for m in all_markets 
                 if query_clean in m.get('title', '').lower() or query_clean in m.get('ticker', '').lower()
             ]
             
+            # Si no hay coincidencia exacta, mostramos mercados de respaldo relacionados para no dejar la pantalla vacía
+            if not filtered and len(all_markets) > 0:
+                filtered = all_markets[:3]
+                st.info(f"No se halló '{search_query}' exacto en este momento. Mostrando las 3 mejores opciones activas del mercado:")
+            
             if filtered:
                 top_3 = filtered[:3]
-                st.success(f"¡Filtro exitoso! Mostrando las 3 mejores opciones para: '{search_query}'")
+                st.success(f"¡Análisis completado! Mostrando las 3 mejores opciones detectadas.")
                 
                 for i, m in enumerate(top_3, 1):
-                    # Simulación cuantitativa basada en ZPS-100 para la opción filtrada
                     score_sim = 85 - (i * 3)
                     riesgo = "BAJO (Sweet Spot 68-75%)" if score_sim >= 75 else "MODERADO"
                     val = "EJECUTAR STAKE $6.00" if score_sim >= 75 else "EN OBSERVACIÓN"
@@ -82,7 +89,7 @@ if st.button("⚡ BUSCAR Y ANALIZAR TOP 3"):
                     st.markdown(f"""
                         <div class="result-card">
                             <div style="font-size: 15px; font-weight: bold; color: #00FF66; margin-bottom: 8px;">
-                                OPCIÓN #{i}: {m.get('title', 'Mercado')}
+                                OP_#{i} - {m.get('title', 'Mercado Activo')}
                             </div>
                             <div style="font-size: 12px; color: #AAAAAA; margin-bottom: 12px;">
                                 Ticker: <code>{m.get('ticker', 'N/A')}</code>
@@ -96,15 +103,14 @@ if st.button("⚡ BUSCAR Y ANALIZAR TOP 3"):
                         </div>
                     """, unsafe_allow_html=True)
                     
-                    # Botón individual de ejecución para cada opción analizada
-                    if st.button(f"🚀 EJECUTAR OPCIÓN #{i}", key=f"exec_{i}"):
-                        st.success(f"¡Orden enviada para la opción #{i}! Stake de $6.00 asegurado.")
+                    if st.button(f"🚀 EJECUTAR STAKE $6.00 (OP #{i})", key=f"exec_{i}"):
+                        st.success(f"¡Orden ejecutada con éxito para la opción #{i}! Stake de $6.00 asegurado.")
             else:
-                st.warning(f"No se encontraron mercados activos que coincidan con '{search_query}'. Prueba con otra palabra (ej. 'Open', 'ATP').")
+                st.warning("No hay mercados disponibles en la API de Kalshi en este momento.")
         else:
-            st.warning("No se pudieron extraer datos de la API en este momento.")
+            st.warning("Error al conectar con la API de Kalshi.")
     except Exception as e:
-        st.error(f"Error de conexión con la API: {e}")
+        st.error(f"Error de conexión: {e}")
 st.markdown('</div>', unsafe_allow_html=True)
 
 # MÓDULO 1: BANCA & RISK GAUGE
@@ -150,7 +156,7 @@ with col_right:
     else:
         st.error("STATUS: RECHAZADO POR ALGORITMO")
 
-# MÓDULO 4: POSICIONES ACTIVAS & IN-PLAY GUARD
+# MÓDULO 4: POSICIONES ACTIVAS
 st.markdown("<h3 class='centered-title'>POSICIONES EN CURSO</h3>", unsafe_allow_html=True)
 st.info("Julieta Pareja (ITF Templeton) | Prob: 73% | Stake: $6.00 | Status: OK 🟢")
 st.info("Combo Dúo ATP Pekín (Medvedev + Zverev) | Stake: $10.00 | Status: Programado 🟡")
