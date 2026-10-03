@@ -1,5 +1,5 @@
 import streamlit as st
-import time
+import requests
 
 # Configuración de página estilo Matrix
 st.set_page_config(page_title="ZPS-100 Matrix Terminal", layout="wide", initial_sidebar_state="collapsed")
@@ -27,19 +27,32 @@ st.markdown("""
     }
     .bank-title { font-size: 12px; color: #888888; }
     .bank-value { font-size: 24px; font-weight: bold; color: #00FF66; }
-    .alert-card {
-        background: rgba(40, 10, 15, 0.85);
-        border: 1px solid #FF0055;
-        box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
-        padding: 15px;
-        border-radius: 8px;
-    }
     </style>
 """, unsafe_allow_html=True)
 
 # Header Matrix Terminal
-st.markdown("### ZPS-100 MATRIX TERMINAL v1.0")
-st.caption("> SYSTEM STATUS: ONLINE | ALGORITHM: ACTIVE")
+st.markdown("### ZPS-100 MATRIX TERMINAL v1.1")
+st.caption("> SYSTEM STATUS: ONLINE | CO-PILOT ACTIVE")
+
+# MÓDULO 0: BUSCADOR DE MERCADOS EN VIVO (KALSHI API)
+st.markdown('<div class="matrix-card">', unsafe_allow_html=True)
+st.markdown("#### 🔍 BUSCADOR DE MERCADOS EN VIVO")
+search_query = st.text_input("Buscar evento o ticker en Kalshi (ej. Tennis, ATP):", "Tennis")
+
+if st.button("⚡ CONSULTAR MERCADOS API"):
+    try:
+        url = f"https://api.elections.kalshi.com/trade-api/v2/markets?status=open&limit=5"
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            data = response.json().get("markets", [])
+            st.success(f"¡Conectado! Se encontraron {len(data)} mercados activos.")
+            for m in data:
+                st.write(f"**{m.get('title')}** | Ticker: `{m.get('ticker')}`")
+        else:
+            st.warning("No se pudieron extraer datos en este momento, usando simulador local.")
+    except Exception as e:
+        st.error(f"Error de conexión con la API: {e}")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # MÓDULO 1: BANCA & RISK GAUGE
 st.markdown('<div class="matrix-card">', unsafe_allow_html=True)
@@ -56,8 +69,8 @@ with c3:
     st.caption("69% Expuesto | Max 70%")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# MÓDULO 2 & 3: CALCULADORA Y ESCÁNER EN TIEMPO REAL
-st.markdown("#### VALIDACIÓN DE OPORTUNIDAD (ZPS-100)")
+# MÓDULO 2 & 3: CALCULADORA Y VALIDACIÓN ZPS-100
+st.markdown("#### 🧮 VALIDACIÓN DE OPORTUNIDAD (ZPS-100)")
 
 col_left, col_right = st.columns([1, 1])
 
@@ -86,6 +99,6 @@ with col_right:
         st.error("STATUS: RECHAZADO POR ALGORITMO")
 
 # MÓDULO 4: POSICIONES ACTIVAS & IN-PLAY GUARD
-st.markdown("#### POSICIONES EN CURSO")
-st.info("Julieta Pareja (ITF Templeton) | Prob: 73% | Stake: $6.00 | Status: OK")
-st.info("Combo Dúo ATP Pekín (Medvedev + Zverev) | Stake: $10.00 | Status: Programado")
+st.markdown("#### 🛡️ POSICIONES EN CURSO (IN-PLAY GUARD)")
+st.info("Julieta Pareja (ITF Templeton) | Prob: 73% | Stake: $6.00 | Status: OK 🟢")
+st.info("Combo Dúo ATP Pekín (Medvedev + Zverev) | Stake: $10.00 | Status: Programado 🟡")
