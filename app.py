@@ -1,126 +1,91 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, StatusBar, TouchableOpacity, ActivityIndicator } from 'react-native';
+import streamlit as st
+import time
 
-export default function App() {
-  const [loading, setLoading] = useState(false);
-  const [marketData, setMarketData] = useState(null);
-  const [copilotMessage, setCopilotMessage] = useState("Sistema en espera de escaneo...");
+# Configuración de página estilo Matrix
+st.set_page_config(page_title="ZPS-100 Matrix Terminal", layout="wide", initial_sidebar_state="collapsed")
 
-  // Función para conectar con tu Backend Co-Pilot (Cambia la IP por la de tu servidor local o en la nube)
-  const fetchLiveMarkets = async () => {
-    setLoading(true);
-    setCopilotMessage("Conectando con la API de Kalshi y aplicando ZPS-100...");
+# Estilos CSS Personalizados (Matrix Theme)
+st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
     
-    try {
-      // Nota: Si usas emulador Android usa 'http://10.0.2.2:5000/api/scan-markets' 
-      // o la IP local de tu computadora en la red Wi-Fi.
-      let response = await fetch('http://10.0.2.2:5000/api/scan-markets');
-      let json = await response.json();
-      
-      if (json.status === "SUCCESS" && json.opportunities.length > 0) {
-        setMarketData(json.opportunities[0]);
-        setCopilotMessage(json.copilot_message);
-      }
-    } catch (error) {
-      // En caso de estar probando sin el servidor encendido, cargamos data simulada autónoma:
-      setMarketData({
-        ticker: "TENIS-LIVE-SIM",
-        title: "ATP / WTA Sweet Spot Match (Live Feed)",
-        probability: 73,
-        volume: 12500,
-        score: 80,
-        status: "EJECUTAR STAKE $6.00",
-        action: "EXECUTE"
-      });
-      setCopilotMessage("Modo autónomo local: Datos procesados sin capturas.");
-    } finally {
-      setLoading(false);
+    html, body, [class*="css"] {
+        font-family: 'JetBrains Mono', monospace;
+        background-color: #05080C;
+        color: #00FF66;
     }
-  };
+    .stApp {
+        background-color: #05080C;
+    }
+    .matrix-card {
+        background: rgba(16, 27, 20, 0.85);
+        border: 1px solid #00FF66;
+        box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    .bank-title { font-size: 12px; color: #888888; }
+    .bank-value { font-size: 24px; font-weight: bold; color: #00FF66; }
+    .alert-card {
+        background: rgba(40, 10, 15, 0.85);
+        border: 1px solid #FF0055;
+        box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+        padding: 15px;
+        border-radius: 8px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-  useEffect(() => {
-    fetchLiveMarkets();
-  }, []);
+# Header Matrix Terminal
+st.markdown("### ZPS-100 MATRIX TERMINAL v1.0")
+st.caption("> SYSTEM STATUS: ONLINE | ALGORITHM: ACTIVE")
 
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#05080C" />
-      <ScrollView contentContainerStyle={styles.scroll}>
-        
-        {/* HEADER TERMINAL */}
-        <Text style={styles.headerTitle}>🟢 ZPS-100 MATRIX CO-PILOT</Text>
-        <Text style={styles.subTitle}>SYSTEM STATUS: ONLINE | AI AUTOMATED</Text>
+# MÓDULO 1: BANCA & RISK GAUGE
+st.markdown('<div class="matrix-card">', unsafe_allow_html=True)
+c1, c2, c3 = st.columns(3)
+with c1:
+    st.markdown('<p class="bank-title">SALDO LÍQUIDO</p>', unsafe_allow_html=True)
+    st.markdown('<p class="bank-value">$7.06 USD</p>', unsafe_allow_html=True)
+with c2:
+    st.markdown('<p class="bank-title">BANCA TOTAL</p>', unsafe_allow_html=True)
+    st.markdown('<p class="bank-value">$23.06 USD</p>', unsafe_allow_html=True)
+with c3:
+    st.markdown('<p class="bank-title">EXPOSICIÓN</p>', unsafe_allow_html=True)
+    st.progress(0.69)
+    st.caption("69% Expuesto | Max 70%")
+st.markdown('</div>', unsafe_allow_html=True)
 
-        {/* RESUMEN BANCA */}
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>BANCA TOTAL / DISPONIBLE</Text>
-          <Text style={styles.bankValue}>$23.06 USD <Text style={styles.liquid}>($7.06 USD Liq)</Text></Text>
-          <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: '69%' }]} />
-          </View>
-          <Text style={styles.cardSub}>Risk Gauge: 69% Expuesto (Max 70%)</Text>
-        </View>
+# MÓDULO 2 & 3: CALCULADORA Y ESCÁNER EN TIEMPO REAL
+st.markdown("#### VALIDACIÓN DE OPORTUNIDAD (ZPS-100)")
 
-        {/* PANEL DE ASISTENTE IA EN VIVO */}
-        <View style={styles.cardAi}>
-          <Text style={styles.aiTitle}>🤖 MATRIX AI CO-PILOT DICTAMEN</Text>
-          <Text style={styles.aiMessage}>{copilotMessage}</Text>
+col_left, col_right = st.columns([1, 1])
 
-          {loading ? (
-            <ActivityIndicator size="small" color="#00FF66" style={{ marginTop: 10 }} />
-          ) : marketData ? (
-            <View style={styles.scoreBox}>
-              <Text style={styles.cardSub}>Evento: {marketData.title}</Text>
-              <Text style={styles.cardSub}>Probabilidad: {marketData.probability}% | Vol: ${marketData.volume}</Text>
-              <Text style={styles.scoreText}>ZPS Score: {marketData.score}/100 PTS</Text>
-              
-              {marketData.action === "EXECUTE" ? (
-                <Text style={styles.statusSuccess}>🟢 {marketData.status}</Text>
-              ) : (
-                <Text style={styles.statusError}>🔴 {marketData.status}</Text>
-              )}
-            </View>
-          ) : null}
+with col_left:
+    deporte = st.selectbox("DEPORTE", ["Tenis 1v1", "Fútbol (3-way)", "Fútbol Americano (NCAA/NFL)"])
+    prob = st.slider("PROBABILIDAD IMPLÍCITA (%)", 50, 95, 73)
+    volumen = st.number_input("VOLUMEN EN KALSHI ($ USD)", min_value=0, value=12000)
+    tiempo_hrs = st.number_input("HORAS HASTA EL EVENTO", min_value=0, value=12)
 
-          <TouchableOpacity style={styles.button} onPress={fetchLiveMarkets}>
-            <Text style={styles.buttonText}>⚡ ESCANEAR MERCADO EN VIVO</Text>
-          </TouchableOpacity>
-        </View>
+with col_right:
+    # Lógica de cálculo cuantitativo ZPS-100
+    score_wp = 40 if (70 <= prob <= 73) else (30 if (68 <= prob <= 75) else 0)
+    score_wl = 25 if volumen > 50000 else (15 if volumen >= 10000 else 5)
+    score_wt = 20 if tiempo_hrs <= 24 else (10 if tiempo_hrs <= 72 else 0)
+    score_wv = 15 if deporte == "Tenis 1v1" else (5 if deporte == "Fútbol (3-way)" else 0)
+    
+    score_total = score_wp + score_wl + score_wt + score_wv
+    
+    st.markdown(f"**SCORE OBTENIDO:** `{score_total}/100 PTS`")
+    
+    if score_total >= 75 and 68 <= prob <= 75:
+        st.success("STATUS: EJECUTAR STAKE $6.00 USD")
+    elif 65 <= score_total < 75:
+        st.warning("STATUS: EVALUAR RIESGO / ENTRADA EN OBSERVACIÓN")
+    else:
+        st.error("STATUS: RECHAZADO POR ALGORITMO")
 
-        {/* IN-PLAY GUARD (MONITORING) */}
-        <View style={styles.cardAlert}>
-          <Text style={styles.alertTitle}>🛡️ POSICIONES EN CURSO (IN-PLAY GUARD)</Text>
-          <Text style={styles.positionText}>🎾 Julieta Pareja @ 73% | Status: OK 🟢</Text>
-          <Text style={styles.positionText}>🎾 Combo ATP Pekín | Status: Programado 🟡</Text>
-        </View>
-
-      </ScrollView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#05080C', paddingTop: 40 },
-  scroll: { padding: 16 },
-  headerTitle: { color: '#00FF66', fontSize: 18, fontWeight: 'bold', fontFamily: 'monospace' },
-  subTitle: { color: '#888', fontSize: 10, marginBottom: 15, fontFamily: 'monospace' },
-  card: { backgroundColor: 'rgba(16, 27, 20, 0.85)', borderColor: '#00FF66', borderWidth: 1, borderRadius: 8, padding: 15, marginBottom: 15 },
-  cardAi: { backgroundColor: 'rgba(10, 30, 20, 0.85)', borderColor: '#00FF66', borderWidth: 1.5, borderRadius: 8, padding: 15, marginBottom: 15 },
-  cardAlert: { backgroundColor: 'rgba(25, 10, 15, 0.85)', borderColor: '#FF0055', borderWidth: 1, borderRadius: 8, padding: 15 },
-  cardLabel: { color: '#888', fontSize: 10, fontFamily: 'monospace' },
-  aiTitle: { color: '#00FF66', fontSize: 13, fontWeight: 'bold', marginBottom: 6, fontFamily: 'monospace' },
-  aiMessage: { color: '#FFF', fontSize: 12, marginBottom: 10, fontFamily: 'monospace', fontStyle: 'italic' },
-  bankValue: { color: '#00FF66', fontSize: 22, fontWeight: 'bold', marginVertical: 5 },
-  liquid: { color: '#FFF', fontSize: 14 },
-  progressBarBg: { height: 6, backgroundColor: '#1A261E', borderRadius: 3, marginVertical: 8 },
-  progressBarFill: { height: 6, backgroundColor: '#00FF66', borderRadius: 3 },
-  cardSub: { color: '#CCC', fontSize: 11, marginVertical: 2, fontFamily: 'monospace' },
-  scoreBox: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#1A261E' },
-  scoreText: { color: '#FFF', fontSize: 15, fontWeight: 'bold', fontFamily: 'monospace', marginTop: 4 },
-  statusSuccess: { color: '#00FF66', fontWeight: 'bold', marginTop: 6, fontFamily: 'monospace' },
-  statusError: { color: '#FF0055', fontWeight: 'bold', marginTop: 6, fontFamily: 'monospace' },
-  alertTitle: { color: '#FF0055', fontSize: 12, fontWeight: 'bold', marginBottom: 8, fontFamily: 'monospace' },
-  positionText: { color: '#FFF', fontSize: 11, marginVertical: 2, fontFamily: 'monospace' },
-  button: { backgroundColor: '#00FF66', padding: 10, borderRadius: 5, marginTop: 12, alignItems: 'center' },
-  buttonText: { color: '#05080C', fontWeight: 'bold', fontSize: 12, fontFamily: 'monospace' }
-});
+# MÓDULO 4: POSICIONES ACTIVAS & IN-PLAY GUARD
+st.markdown("#### POSICIONES EN CURSO")
+st.info("Julieta Pareja (ITF Templeton) | Prob: 73% | Stake: $6.00 | Status: OK")
+st.info("Combo Dúo ATP Pekín (Medvedev + Zverev) | Stake: $10.00 | Status: Programado")
