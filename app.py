@@ -1,91 +1,83 @@
-import streamlit as st
-import time
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
 
-# Configuración de página estilo Matrix
-st.set_page_config(page_title="ZPS-100 Matrix Terminal", layout="wide", initial_sidebar_state="collapsed")
+export default function App() {
+  const [prob, setProb] = useState(73);
+  const [volumen, setVolumen] = useState(12000);
+  
+  // Algoritmo ZPS-100 Integrado
+  const wp = (prob >= 70 && prob <= 73) ? 40 : ((prob >= 68 && prob <= 75) ? 30 : 0);
+  const wl = volumen >= 50000 ? 25 : (volumen >= 10000 ? 15 : 5);
+  const wt = 20; // < 24h
+  const wv = 15; // Tenis 1v1
+  const score = wp + wl + wt + wv;
 
-# Estilos CSS Personalizados (Matrix Theme)
-st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'JetBrains Mono', monospace;
-        background-color: #05080C;
-        color: #00FF66;
-    }
-    .stApp {
-        background-color: #05080C;
-    }
-    .matrix-card {
-        background: rgba(16, 27, 20, 0.85);
-        border: 1px solid #00FF66;
-        box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-    }
-    .bank-title { font-size: 12px; color: #888888; }
-    .bank-value { font-size: 24px; font-weight: bold; color: #00FF66; }
-    .alert-card {
-        background: rgba(40, 10, 15, 0.85);
-        border: 1px solid #FF0055;
-        box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
-        padding: 15px;
-        border-radius: 8px;
-    }
-    </style>
-""", unsafe_allow_html=True)
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#05080C" />
+      <ScrollView contentContainerStyle={styles.scroll}>
+        
+        {/* HEADER TERMINAL */}
+        <Text style={styles.headerTitle}>🟢 ZPS-100 MATRIX TERMINAL</Text>
+        <Text style={styles.subTitle}>SYSTEM STATUS: ONLINE | MOBILE CORE</Text>
 
-# Header Matrix Terminal
-st.markdown("### 🟢 ZPS-100 MATRIX TERMINAL v1.0")
-st.caption("> SYSTEM STATUS: ONLINE | ALGORITHM: ACTIVE")
+        {/* RESUMEN BANCA */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>BANCA TOTAL / DISPONIBLE</Text>
+          <Text style={styles.bankValue}>$23.06 USD <Text style={styles.liquid}>($7.06 USD Liq)</Text></Text>
+          <View style={styles.progressBarBg}>
+            <View style={[styles.progressBarFill, { width: '69%' }]} />
+          </View>
+          <Text style={styles.cardSub}>Risk Gauge: 69% Expuesto (Max 70%)</Text>
+        </View>
 
-# MÓDULO 1: BANCA & RISK GAUGE
-st.markdown('<div class="matrix-card">', unsafe_allow_html=True)
-c1, c2, c3 = st.columns(3)
-with c1:
-    st.markdown('<p class="bank-title">SALDO LÍQUIDO</p>', unsafe_allow_html=True)
-    st.markdown('<p class="bank-value">$7.06 USD</p>', unsafe_allow_html=True)
-with c2:
-    st.markdown('<p class="bank-title">BANCA TOTAL</p>', unsafe_allow_html=True)
-    st.markdown('<p class="bank-value">$23.06 USD</p>', unsafe_allow_html=True)
-with c3:
-    st.markdown('<p class="bank-title">EXPOSICIÓN</p>', unsafe_allow_html=True)
-    st.progress(0.69)
-    st.caption("69% Expuesto | Max 70%")
-st.markdown('</div>', unsafe_allow_html=True)
+        {/* CALCULADORA ZPS-100 */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>🧮 VALIDACIÓN DE RIESGO</Text>
+          <Text style={styles.cardSub}>Deporte: Tenis 1v1 (ATP/WTA)</Text>
+          <Text style={styles.cardSub}>Probabilidad Implícita: {prob}%</Text>
+          <Text style={styles.cardSub}>Volumen: ${volumen.toLocaleString()} USD</Text>
+          
+          <View style={styles.scoreBox}>
+            <Text style={styles.scoreText}>ZPS Score: {score}/100 PTS</Text>
+            {score >= 80 ? (
+              <Text style={styles.statusSuccess}>🟢 EXECUTE STAKE $6.00</Text>
+            ) : (
+              <Text style={styles.statusError}>🔴 REJECT / HOLD</Text>
+            )}
+          </View>
+        </View>
 
-# MÓDULO 2 & 3: CALCULADORA Y ESCÁNER EN TIEMPO REAL
-st.markdown("#### 🧮 VALIDACIÓN DE OPORTUNIDAD (ZPS-100)")
+        {/* IN-PLAY GUARD (MONITORING) */}
+        <View style={styles.cardAlert}>
+          <Text style={styles.alertTitle}>🛡️ POSICIONES EN CURSO (IN-PLAY GUARD)</Text>
+          <Text style={styles.positionText}>🎾 Julieta Pareja @ 73% | Status: OK</Text>
+          <Text style={styles.positionText}>🎾 Combo ATP Pekín | Status: Programado</Text>
+        </View>
 
-col_left, col_right = st.columns([1, 1])
+      </ScrollView>
+    </View>
+  );
+}
 
-with col_left:
-    deporte = st.selectbox("DEPORTE", ["Tenis 1v1", "Fútbol (3-way)", "Fútbol Americano (NCAA/NFL)"])
-    prob = st.slider("PROBABILIDAD IMPLÍCITA (%)", 50, 95, 73)
-    volumen = st.number_input("VOLUMEN EN KALSHI ($ USD)", min_value=0, value=12000)
-    tiempo_hrs = st.number_input("HORAS HASTA EL EVENTO", min_value=0, value=12)
-
-with col_right:
-    # Lógica de cálculo cuantitativo
-    score_wp = 40 if (70 <= prob <= 73) else (30 if (68 <= prob <= 75) else 0)
-    score_wl = 25 if volumen > 50000 else (15 if volumen >= 10000 else 5)
-    score_wt = 20 if tiempo_hrs <= 24 else (10 if tiempo_hrs <= 72 else 0)
-    score_wv = 15 if deporte == "Tenis 1v1" else (5 if deporte == "Fútbol (3-way)" else 0)
-    
-    score_total = score_wp + score_wl + score_wt + score_wv
-    
-    st.markdown(f"**SCORE OBTENIDO:** `{score_total}/100 PTS`")
-    
-    if score_total >= 75 and 68 <= prob <= 75:
-        st.success("🟢 STATUS: EJECUTAR STAKE $6.00 USD")
-    elif 65 <= score_total < 75:
-        st.warning("🟡 STATUS: EVALUAR RIESGO / ENTRADA EN OBSERVACIÓN")
-    else:
-        st.error("🔴 STATUS: RECHAZADO POR ALGORITMO")
-
-# MÓDULO 4: POSICIONES ACTIVAS & IN-PLAY GUARD
-st.markdown("#### 🛡️ POSICIONES EN CURSO")
-st.info("🎾 Julieta Pareja (ITF Templeton) | Prob: 73% | Stake: $6.00 | Status: OK")
-st.info("🎾 Combo Dúo ATP Pekín (Medvedev + Zverev) | Stake: $10.00 | Status: Programado")
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#05080C', paddingTop: 40 },
+  scroll: { padding: 16 },
+  headerTitle: { color: '#00FF66', fontSize: 18, fontWeight: 'bold', fontFamily: 'monospace' },
+  subTitle: { color: '#888', fontSize: 10, marginBottom: 15, fontFamily: 'monospace' },
+  card: { backgroundColor: 'rgba(16, 27, 20, 0.85)', borderColor: '#00FF66', borderWidth: 1, borderRadius: 8, padding: 15, marginBottom: 15 },
+  cardAlert: { backgroundColor: 'rgba(25, 10, 15, 0.85)', borderColor: '#FF0055', borderWidth: 1, borderRadius: 8, padding: 15 },
+  cardLabel: { color: '#888', fontSize: 10, fontFamily: 'monospace' },
+  cardTitle: { color: '#00FF66', fontSize: 14, fontWeight: 'bold', marginBottom: 8, fontFamily: 'monospace' },
+  bankValue: { color: '#00FF66', fontSize: 22, fontWeight: 'bold', marginVertical: 5 },
+  liquid: { color: '#FFF', fontSize: 14 },
+  progressBarBg: { height: 6, backgroundColor: '#1A261E', borderRadius: 3, marginVertical: 8 },
+  progressBarFill: { height: 6, backgroundColor: '#00FF66', borderRadius: 3 },
+  cardSub: { color: '#CCC', fontSize: 12, marginVertical: 2, fontFamily: 'monospace' },
+  scoreBox: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#1A261E' },
+  scoreText: { color: '#FFF', fontSize: 16, fontWeight: 'bold', fontFamily: 'monospace' },
+  statusSuccess: { color: '#00FF66', fontWeight: 'bold', marginTop: 5 },
+  statusError: { color: '#FF0055', fontWeight: 'bold', marginTop: 5 },
+  alertTitle: { color: '#FF0055', fontSize: 12, fontWeight: 'bold', marginBottom: 8, fontFamily: 'monospace' },
+  positionText: { color: '#FFF', fontSize: 11, marginVertical: 2, fontFamily: 'monospace' }
+});
