@@ -85,11 +85,15 @@ with c2:
 with c3:
     st.error("**🔴 RECHAZAR / DESCARTAR**\n\nProbabilidad: **< 68%** o **> 75%**\nPuntos: **< 65 PTS**\nStake: **$0.00 USD (Abortar)**")
 
-# --- BUSCADOR Y FILTROS POR BOTÓN ---
+# --- BUSCADOR CON LUPA Y TECLA ENTER ---
 st.markdown("---")
 st.subheader("🔍 Filtro de Mercados")
 
-search_query = st.text_input("🔎 Equipo, jugador, deporte o liga:", placeholder="Ej: Tennis, Sakkari, Soccer, Fed...")
+search_query = st.text_input(
+    "Escribe un equipo, jugador o liga y presiona Enter para buscar:",
+    placeholder="🔍 Escribe aquí y presiona Enter...",
+    type="search"
+)
 
 st.write("**Filtrar rápido por estado de probabilidad:**")
 
