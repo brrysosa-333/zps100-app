@@ -10,38 +10,22 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS oscuros y botones visuales
+# Estilos CSS
 st.markdown("""
 <style>
     .stApp {
         background-color: #0e1117;
     }
-    .badge-execute {
-        background-color: #064e3b;
-        color: #34d399;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-weight: bold;
-    }
-    .badge-monitor {
-        background-color: #78350f;
-        color: #fbbf24;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-weight: bold;
-    }
-    .badge-discard {
-        background-color: #7f1d1d;
-        color: #fca5a5;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-weight: bold;
+    div.stButton > button {
+        width: 100%;
+        border-radius: 8px;
+        font-weight: 600;
     }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("🛡️ Escáner ZPS-100 (Kalshi Live)")
-st.caption("Filtrado cuantitativo de oportunidades según rango de probabilidad (68% - 75%).")
+st.caption("Filtrado cuantitativo de oportunidades según el rango de probabilidad de precisión (68% - 75%).")
 
 STAKE_FIJO = 6.00
 
@@ -107,22 +91,13 @@ st.subheader("🔍 Filtro de Mercados")
 
 search_query = st.text_input("🔎 Equipo, jugador, deporte o liga:", placeholder="Ej: Tennis, Sakkari, Soccer, Fed...")
 
-st.write("**Filtrar rápido por estado:**")
-col_f1, col_f2, col_f3, col_f4 = st.columns(4)
+st.write("**Filtrar rápido por estado de probabilidad:**")
 
-filter_state = "TODOS"
-with col_f1:
-    if st.button("🟢 Solo Ejecutar"):
-        filter_state = "EJECUTAR"
-with col_f2:
-    if st.button("🟡 Solo Monitorear"):
-        filter_state = "MONITOREAR"
-with col_f3:
-    if st.button("🔴 Solo Descartar"):
-        filter_state = "DESCARTAR"
-with col_f4:
-    if st.button("🌐 Ver Todos"):
-        filter_state = "TODOS"
+filter_state = st.radio(
+    "Selecciona un filtro:",
+    ["🌐 Ver Todos", "🟢 Solo Ejecutar", "🟡 Solo Monitorear", "🔴 Solo Descartar"],
+    horizontal=True
+)
 
 raw_markets = fetch_kalshi_markets()
 
@@ -145,13 +120,13 @@ if raw_markets:
         # Filtro de texto
         match_text = True if not query_clean else (query_clean in title.lower() or query_clean in ticker.lower())
         
-        # Filtro por botón de estado
+        # Filtro por estado
         match_status = True
-        if filter_state == "EJECUTAR":
+        if filter_state == "🟢 Solo Ejecutar":
             match_status = "🟢" in status
-        elif filter_state == "MONITOREAR":
+        elif filter_state == "🟡 Solo Monitorear":
             match_status = "🟡" in status
-        elif filter_state == "DESCARTAR":
+        elif filter_state == "🔴 Solo Descartar":
             match_status = "🔴" in status
             
         if match_text and match_status:
@@ -170,7 +145,7 @@ if raw_markets:
         df = pd.DataFrame(parsed_results)
         df = df.sort_values(by="Score ZPS", ascending=False)
         
-        st.success(f"Se encontraron **{len(df)}** mercados.")
+        st.success(f"Se encontraron **{len(df)}** mercado(s).")
         st.dataframe(df, use_container_width=True, hide_index=True)
     else:
         st.warning("No se encontraron mercados con el filtro o estado seleccionado.")
