@@ -1,10 +1,8 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# Configuración de la página
-st.set_page_config(page_title="ZPS-100 Terminal", page_icon="🎛️", layout="centered")
+st.set_page_config(page_title="ZPS-100 Terminal", page_icon="🎛️", layout="wide")
 
-# Inyectando la interfaz exacta con HTML y CSS
 html_code = """
 <!DOCTYPE html>
 <html lang="es">
@@ -18,6 +16,7 @@ html_code = """
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -25,30 +24,21 @@ html_code = """
             color: #ffffff;
             display: flex;
             justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            padding: 10px;
+            padding: 15px;
             background-image: radial-gradient(circle at 50% 50%, #0d1b3e 0%, #050711 80%);
         }
 
-        .phone-container {
+        /* Contenedor adaptado a pantalla completa real */
+        .app-container {
             width: 100%;
-            max-width: 380px;
+            max-width: 480px;
             background: #090e1f;
-            border: 2px solid #00d2ff;
-            border-radius: 40px;
-            padding: 20px 15px;
-            box-shadow: 0 0 25px rgba(0, 210, 255, 0.4), inset 0 0 15px rgba(0, 210, 255, 0.2);
+            border: 1px solid #00d2ff;
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.25);
             position: relative;
-        }
-
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #8a99ad;
-            margin-bottom: 15px;
-            padding: 0 5px;
         }
 
         .header {
@@ -80,7 +70,7 @@ html_code = """
         }
 
         .title-group h1 {
-            font-size: 14px;
+            font-size: 15px;
             letter-spacing: 0.5px;
             color: #ffffff;
         }
@@ -95,12 +85,12 @@ html_code = """
             font-size: 10px;
             background: rgba(34, 197, 94, 0.15);
             color: #4ade80;
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 10px;
             border: 1px solid #22c55e;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
         }
 
         .live-dot {
@@ -111,15 +101,25 @@ html_code = """
             box-shadow: 0 0 6px #22c55e;
         }
 
-        .search-box {
+        .search-input {
             width: 100%;
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid #1e3a8a;
             border-radius: 12px;
-            padding: 10px 14px;
-            color: #94a3b8;
-            font-size: 12px;
+            padding: 12px 14px;
+            color: #ffffff;
+            font-size: 13px;
             margin-bottom: 15px;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .search-input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
         }
 
         .tabs {
@@ -181,7 +181,7 @@ html_code = """
         .track-metrics {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            font-size: 10px;
+            font-size: 11px;
             color: #94a3b8;
             margin-bottom: 6px;
             text-align: left;
@@ -232,7 +232,7 @@ html_code = """
             margin-top: 15px;
             padding-top: 12px;
             border-top: 1px solid #1e293b;
-            font-size: 10px;
+            font-size: 11px;
             color: #94a3b8;
         }
 
@@ -246,12 +246,7 @@ html_code = """
 </head>
 <body>
 
-    <div class="phone-container">
-        <div class="status-bar">
-            <span>8:05</span>
-            <span>📶 🛜 🔋 4G</span>
-        </div>
-
+    <div class="app-container">
         <div class="header">
             <div class="user-info">
                 <div class="avatar">👤</div>
@@ -265,9 +260,7 @@ html_code = """
             </div>
         </div>
 
-        <div class="search-box">
-            🔍 Buscar pista exacta (ej. Yastremska, NFL)...
-        </div>
+        <input type="text" class="search-input" placeholder="🔍 Buscar pista exacta (ej. Yastremska, NFL)...">
 
         <div class="tabs">
             <span class="tab active">📊 ACTIVAS</span>
@@ -341,7 +334,7 @@ html_code = """
             <div class="footer-item"><span>≡</span> Menú</div>
             <div class="footer-item"><span>🔄</span> Sincronizar</div>
             <div class="footer-item"><span>➕</span> Nueva Pista</div>
-            <div class="footer-item"><span>⚙️️</span> Ajustes</div>
+            <div class="footer-item"><span>⚙</span> Ajustes</div>
         </div>
     </div>
 
@@ -349,5 +342,4 @@ html_code = """
 </html>
 """
 
-# Renderizar en la app
 components.html(html_code, height=850, scrolling=True)
