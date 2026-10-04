@@ -1,162 +1,369 @@
-import streamlit as st
-import requests
-
-# Configuración de página
-st.set_page_config(page_title="ZPS-100 Terminal", layout="wide", initial_sidebar_state="collapsed")
-
-# Estilos CSS Personalizados (Amplio, limpio, sin comprimir)
-st.markdown("""
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZPS-100 Terminal de Precisión</title>
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'JetBrains Mono', monospace;
-        background-color: #05080C;
-        color: #00FF66;
-    }
-    .stApp {
-        background-color: #05080C;
-    }
-    .matrix-card {
-        background: rgba(16, 27, 20, 0.9);
-        border: 1px solid #00FF66;
-        box-shadow: 0 0 12px rgba(0, 255, 102, 0.2);
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
-    .result-card {
-        background: rgba(10, 30, 20, 0.95);
-        border: 1px solid #00FF66;
-        padding: 18px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-    }
-    .centered-title {
-        text-align: center;
-        font-weight: bold;
-        color: #00FF66;
-        margin-top: 15px;
-        margin-bottom: 20px;
-        letter-spacing: 1px;
-    }
-    .bank-title { font-size: 13px; color: #888888; }
-    .bank-value { font-size: 26px; font-weight: bold; color: #00FF66; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #050711;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background-image: radial-gradient(circle at 50% 50%, #0d1b3e 0%, #050711 80%);
+        }
+
+        .phone-container {
+            width: 380px;
+            background: #090e1f;
+            border: 2px solid #00d2ff;
+            border-radius: 40px;
+            padding: 20px 15px;
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.4), inset 0 0 15px rgba(0, 210, 255, 0.2);
+            position: relative;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #8a99ad;
+            margin-bottom: 15px;
+            padding: 0 5px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #1e293b;
+            border-radius: 15px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            background: #1e293b;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #38bdf8;
+        }
+
+        .title-group h1 {
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+        }
+
+        .title-group p {
+            font-size: 10px;
+            color: #38bdf8;
+            font-weight: bold;
+        }
+
+        .live-badge {
+            font-size: 10px;
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            padding: 3px 8px;
+            border-radius: 10px;
+            border: 1px solid #22c55e;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #22c55e;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #22c55e;
+        }
+
+        .search-box {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #1e3a8a;
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: #94a3b8;
+            font-size: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 12px;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 8px;
+        }
+
+        .tab {
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            color: #38bdf8;
+            font-weight: bold;
+            border-bottom: 2px solid #38bdf8;
+            padding-bottom: 6px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            color: #38bdf8;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .track-card {
+            background: rgba(13, 20, 38, 0.9);
+            border: 1px solid #3b82f6;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+
+        .track-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .indicator.green { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+        .indicator.yellow { background: #eab308; box-shadow: 0 0 6px #eab308; }
+        .indicator.purple { background: #a855f7; box-shadow: 0 0 6px #a855f7; }
+        .indicator.red { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+
+        .track-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            font-size: 10px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            text-align: left;
+        }
+
+        .track-metrics span:nth-child(2), .track-metrics span:nth-child(5),
+        .track-metrics span:nth-child(3), .track-metrics span:nth-child(6) {
+            color: #ffffff;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 16px;
+            background: #020617;
+            border-radius: 8px;
+            border: 1px solid #1e3a8a;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            opacity: 0.35;
+        }
+
+        .progress-fill.green { background: #22c55e; width: 72%; }
+        .progress-fill.yellow { background: #eab308; width: 66%; }
+        .progress-fill.red { background: #ef4444; width: 75%; }
+        .progress-fill.purple { background: #3b82f6; width: 75%; }
+
+        .progress-text {
+            position: relative;
+            z-index: 2;
+            font-size: 10px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .footer-nav {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 1px solid #1e293b;
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .footer-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+        }
+
+        .footer-item:hover {
+            color: #38bdf8;
+        }
     </style>
-""", unsafe_allow_html=True)
+</head>
+<body>
 
-# Título principal centrado
-st.markdown("<h2 class='centered-title'>ZPS-100 TERMINAL</h2>", unsafe_allow_html=True)
+    <div class="phone-container">
+        <!-- Barra superior móvil -->
+        <div class="status-bar">
+            <span>8:05</span>
+            <span>📶 🛜 🔋 4G</span>
+        </div>
 
-# MÓDULO 0: BUSCADOR INTERACTIVO Y TOP 3
-st.markdown('<div class="matrix-card">', unsafe_allow_html=True)
-st.markdown("#### 🔍 BUSCADOR & FILTRO INTELIGENTE")
+        <!-- Cabecera de la App -->
+        <div class="header">
+            <div class="user-info">
+                <div class="avatar">👤</div>
+                <div class="title-group">
+                    <h1>ZPS-100</h1>
+                    <p>TERMINAL DE PRECISIÓN</p>
+                </div>
+            </div>
+            <div class="live-badge">
+                <div class="live-dot"></div> EN VIVO
+            </div>
+        </div>
 
-# Creamos un formulario limpio para asegurar el acceso y ejecución del buscador
-with st.form(key='search_form'):
-    search_query = st.text_input("Filtrar mercado exacto (ej. Tennis, Open, Soccer):", "Tennis")
-    submit_button = st.form_submit_button(label="⚡ BUSCAR Y ANALIZAR TOP 3")
+        <!-- Buscador exacto -->
+        <div class="search-box">
+            🔍 Buscar pista exacta (ej. Yastremska, NFL)...
+        </div>
 
-if submit_button:
-    try:
-        url = "https://api.elections.kalshi.com/trade-api/v2/markets?status=open&limit=100"
-        response = requests.get(url, timeout=5)
-        
-        if response.status_code == 200:
-            all_markets = response.json().get("markets", [])
-            query_clean = search_query.strip().lower()
-            
-            # Filtro estricto por la consulta del usuario
-            filtered = [
-                m for m in all_markets 
-                if query_clean in m.get('title', '').lower() or query_clean in m.get('ticker', '').lower()
-            ]
-            
-            # Si no hay coincidencia exacta, mostramos mercados de respaldo relacionados para no dejar la pantalla vacía
-            if not filtered and len(all_markets) > 0:
-                filtered = all_markets[:3]
-                st.info(f"No se halló '{search_query}' exacto en este momento. Mostrando las 3 mejores opciones activas del mercado:")
-            
-            if filtered:
-                top_3 = filtered[:3]
-                st.success(f"¡Análisis completado! Mostrando las 3 mejores opciones detectadas.")
-                
-                for i, m in enumerate(top_3, 1):
-                    score_sim = 85 - (i * 3)
-                    riesgo = "BAJO (Sweet Spot 68-75%)" if score_sim >= 75 else "MODERADO"
-                    val = "EJECUTAR STAKE $6.00" if score_sim >= 75 else "EN OBSERVACIÓN"
-                    
-                    st.markdown(f"""
-                        <div class="result-card">
-                            <div style="font-size: 15px; font-weight: bold; color: #00FF66; margin-bottom: 8px;">
-                                OP_#{i} - {m.get('title', 'Mercado Activo')}
-                            </div>
-                            <div style="font-size: 12px; color: #AAAAAA; margin-bottom: 12px;">
-                                Ticker: <code>{m.get('ticker', 'N/A')}</code>
-                            </div>
-                            <hr style="margin: 10px 0; border-color: #00FF6644;">
-                            <div style="font-size: 13px; line-height: 1.6; color: #DDDDDD;">
-                                📊 <b>ZPS Score:</b> <span style="color: #00FF66;">{score_sim}/100 PTS</span><br>
-                                🛡️ <b>Riesgo:</b> <span style="color: #00FF66;">{riesgo}</span><br>
-                                🎯 <b>Valoración:</b> <span style="color: #FFFF00; font-weight: bold;">{val}</span>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
-                    if st.button(f"🚀 EJECUTAR STAKE $6.00 (OP #{i})", key=f"exec_{i}"):
-                        st.success(f"¡Orden ejecutada con éxito para la opción #{i}! Stake de $6.00 asegurado.")
-            else:
-                st.warning("No hay mercados disponibles en la API de Kalshi en este momento.")
-        else:
-            st.warning("Error al conectar con la API de Kalshi.")
-    except Exception as e:
-        st.error(f"Error de conexión: {e}")
-st.markdown('</div>', unsafe_allow_html=True)
+        <!-- Pestañas -->
+        <div class="tabs">
+            <span class="tab active">📊 ACTIVAS</span>
+            <span class="tab">⏳ PENDIENTES</span>
+            <span class="tab">📂 HISTORIAL</span>
+        </div>
 
-# MÓDULO 1: BANCA & RISK GAUGE
-st.markdown('<div class="matrix-card">', unsafe_allow_html=True)
-c1, c2, c3 = st.columns(3)
-with c1:
-    st.markdown('<p class="bank-title">SALDO LÍQUIDO</p>', unsafe_allow_html=True)
-    st.markdown('<p class="bank-value">$7.06 USD</p>', unsafe_allow_html=True)
-with c2:
-    st.markdown('<p class="bank-title">BANCA TOTAL</p>', unsafe_allow_html=True)
-    st.markdown('<p class="bank-value">$23.06 USD</p>', unsafe_allow_html=True)
-with c3:
-    st.markdown('<p class="bank-title">EXPOSICIÓN</p>', unsafe_allow_html=True)
-    st.progress(0.69)
-    st.caption("69% Expuesto | Max 70%")
-st.markdown('</div>', unsafe_allow_html=True)
+        <div class="section-title">🎵 PISTAS ACTIVAS (SWEET SPOT: 68% - 75%)</div>
 
-# MÓDULO 2 & 3: CALCULADORA MANUAL ZPS-100
-st.markdown("<h3 class='centered-title'>VALIDACIÓN ZPS-100</h3>", unsafe_allow_html=True)
+        <!-- Pista 1 -->
+        <div class="track-card">
+            <div class="track-header">
+                <div class="indicator green"></div> 1. Dayana Yastremska (WTA)
+            </div>
+            <div class="track-metrics">
+                <span>Probabilidad</span><span>Costo</span><span>Paga</span>
+                <span>$0.00</span><span>$2.00</span><span>$9.17</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill green"></div>
+                <span class="progress-text">72%</span>
+            </div>
+        </div>
 
-col_left, col_right = st.columns([1, 1])
+        <!-- Pista 2 -->
+        <div class="track-card">
+            <div class="track-header">
+                <div class="indicator green"></div> 2. Naoya Honda (ATP)
+            </div>
+            <div class="track-metrics">
+                <span>Probabilidad</span><span>Costo</span><span>Paga</span>
+                <span>$0.00</span><span>$6.00</span><span>$8.17</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill green"></div>
+                <span class="progress-text">66%</span>
+            </div>
+        </div>
 
-with col_left:
-    deporte = st.selectbox("DEPORTE", ["Tenis 1v1", "Fútbol (3-way)", "Fútbol Americano (NCAA/NFL)"])
-    prob = st.slider("PROBABILIDAD IMPLÍCITA (%)", 50, 95, 73)
-    volumen = st.number_input("VOLUMEN EN KALSHI ($ USD)", min_value=0, value=12000)
-    tiempo_hrs = st.number_input("HORAS HASTA EL EVENTO", min_value=0, value=12)
+        <!-- Pista 3 -->
+        <div class="track-card">
+            <div class="track-header">
+                <div class="indicator yellow"></div> 3. Julieta Pareja (ITF)
+            </div>
+            <div class="track-metrics">
+                <span>Probabilidad</span><span>Costo</span><span>Paga</span>
+                <span>-Cato $.00</span><span>-$1.19</span><span>-$1.19</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill red"></div>
+                <span class="progress-text">75%</span>
+            </div>
+        </div>
 
-with col_right:
-    score_wp = 40 if (70 <= prob <= 73) else (30 if (68 <= prob <= 75) else 0)
-    score_wl = 25 if volumen > 50000 else (15 if volumen >= 10000 else 5)
-    score_wt = 20 if tiempo_hrs <= 24 else (10 if tiempo_hrs <= 72 else 0)
-    score_wv = 15 if deporte == "Tenis 1v1" else (5 if deporte == "Fútbol (3-way)" else 0)
-    
-    score_total = score_wp + score_wl + score_wt + score_wv
-    
-    st.markdown(f"<div style='text-align: center; margin-top: 15px;'><strong>SCORE OBTENIDO:</strong><br><span style='font-size: 26px; color: #00FF66;'>{score_total}/100 PTS</span></div>", unsafe_allow_html=True)
-    
-    if score_total >= 75 and 68 <= prob <= 75:
-        st.success("STATUS: EJECUTAR STAKE $6.00 USD")
-    elif 65 <= score_total < 75:
-        st.warning("STATUS: EVALUAR RIESGO / OBSERVACIÓN")
-    else:
-        st.error("STATUS: RECHAZADO POR ALGORITMO")
+        <!-- Pista 4 -->
+        <div class="track-card">
+            <div class="track-header">
+                <div class="indicator green"></div> 4. SEA Seahawks (NFL)
+            </div>
+            <div class="track-metrics">
+                <span>Probabilidad</span><span>Costo</span><span>Paga</span>
+                <span>-Cato $.00</span><span>$4.00</span><span>$9.41</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill green"></div>
+                <span class="progress-text">66%</span>
+            </div>
+        </div>
 
-# MÓDULO 4: POSICIONES ACTIVAS
-st.markdown("<h3 class='centered-title'>POSICIONES EN CURSO</h3>", unsafe_allow_html=True)
-st.info("Julieta Pareja (ITF Templeton) | Prob: 73% | Stake: $6.00 | Status: OK 🟢")
-st.info("Combo Dúo ATP Pekín (Medvedev + Zverev) | Stake: $10.00 | Status: Programado 🟡")
+        <!-- Pista 5 -->
+        <div class="track-card">
+            <div class="track-header">
+                <div class="indicator purple"></div> 5. Combo ATP Beijing
+            </div>
+            <div class="track-metrics">
+                <span>Probabilidad</span><span>Costo</span><span>Paga</span>
+                <span>-Cato $.00</span><span>$6.00</span><span>$7.12</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill purple"></div>
+                <span class="progress-text">75%</span>
+            </div>
+        </div>
+
+        <!-- Menú Inferior -->
+        <div class="footer-nav">
+            <div class="footer-item"><span>≡</span> Menú</div>
+            <div class="footer-item"><span>🔄</span> Sincronizar</div>
+            <div class="footer-item"><span>➕</span> Nueva Pista</div>
+            <div class="footer-item"><span>⚙️</span> Ajustes</div>
+        </div>
+    </div>
+
+</body>
+</html>
