@@ -5,12 +5,10 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="ZPS-100 Terminal de Precisión", page_icon="🎛️", layout="wide", initial_sidebar_state="collapsed")
 
 # --- INGENIERÍA DE INTERFAZ Y BLINDAJE ---
-html_code = """
-<!DOCTYPE html>
+html_code = """<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <!-- Meta tags para hacerla inmersiva en móvil y bloquear zoom/escalado -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ZPS-100 Terminal</title>
     <style>
@@ -33,7 +31,6 @@ html_code = """
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            /* --- INGENIERÍA UX: BLOQUEO TOTAL DE COPIAR/PEGAR Y RESALTADO --- */
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
@@ -43,7 +40,6 @@ html_code = """
             user-select: none;
         }
         
-        /* Permitir selección solo DENTRO del input de búsqueda */
         input.search-input, textarea {
             -webkit-user-select: text !important;
             -khtml-user-select: text !important;
@@ -58,31 +54,27 @@ html_code = """
             display: flex;
             justify-content: center;
             min-height: 100vh;
-            padding: 10px; /* Padding reducido para aprovechar pantalla */
+            padding: 10px;
             background-image: radial-gradient(circle at 50% 50%, #0d1b3e 0%, var(--bg-deep) 90%);
             overflow-x: hidden;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
         }
 
         .app-container {
             width: 100%;
-            max-width: 420px; /* Ancho ligeramente más compacto y profesional */
+            max-width: 420px;
             background: var(--bg-card);
             border: 1px solid var(--neon-blue);
-            border-radius: 32px; /* Esquinas ligeramente menos redondeadas para look más serio */
+            border-radius: 32px;
             padding: 20px;
             box-shadow: 0 0 30px rgba(0, 210, 255, 0.2), inset 0 0 15px rgba(0, 210, 255, 0.1);
             position: relative;
             display: flex;
             flex-direction: column;
-            margin-top: 10px;
-            margin-bottom: 10px;
-            height: calc(100vh - 20px); /* Ocupa casi todo el alto disponible */
-            max-height: 900px; /* Altura máxima para tablets/laptops */
+            margin: 10px auto;
+            height: calc(100vh - 20px);
+            max-height: 900px;
         }
 
-        /* Barra de estado simulada (más minimalista) */
         .top-status-bar {
             display: flex;
             justify-content: space-between;
@@ -161,7 +153,6 @@ html_code = """
             box-shadow: 0 0 6px var(--neon-green);
         }
 
-        /* --- INGENIERÍA BUSCADOR: AHORA ES FORMULARIO FUNCIONAL --- */
         .search-form {
             width: 100%;
             display: flex;
@@ -212,13 +203,12 @@ html_code = """
             opacity: 1;
         }
 
-        /* Feedback visual de búsqueda */
         #search-feedback {
             font-size: 10px;
             color: var(--neon-cyan);
             margin-bottom: 10px;
             text-align: center;
-            display: none; /* Oculto por defecto */
+            display: none;
             text-shadow: 0 0 5px var(--neon-cyan);
             font-weight: bold;
         }
@@ -238,10 +228,6 @@ html_code = """
             padding-bottom: 6px;
             position: relative;
             transition: color 0.3s;
-        }
-
-        .tab:hover {
-            color: var(--neon-cyan);
         }
 
         .tab.active {
@@ -269,13 +255,11 @@ html_code = """
             text-shadow: 0 0 5px var(--neon-cyan);
         }
 
-        /* Contenedor scrolleable de las tarjetas */
         .tracks-wrapper {
             flex: 1;
             overflow-y: auto;
             padding-right: 5px;
             margin-right: -5px;
-            /* Scrollbar personalizado */
             scrollbar-width: thin;
             scrollbar-color: var(--border-color) var(--bg-deep);
         }
@@ -284,36 +268,25 @@ html_code = """
             width: 6px;
         }
 
-        .tracks-wrapper::-webkit-scrollbar-track {
-            background: var(--bg-deep);
-        }
-
         .tracks-wrapper::-webkit-scrollbar-thumb {
             background: var(--border-color);
             border-radius: 3px;
         }
 
-        .tracks-wrapper::-webkit-scrollbar-thumb:hover {
-            background: var(--neon-blue);
-        }
-
         .track-card {
             background: var(--bg-card);
-            border: 1px solid var(--neon-blue); /* Borde base más fino */
+            border: 1px solid var(--neon-blue);
             border-radius: 18px;
             padding: 12px;
             margin-bottom: 12px;
             box-shadow: 0 0 8px rgba(59, 130, 246, 0.15);
             transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
-            cursor: default; /* Cursor por defecto, no de puntero */
         }
 
-        /* Estado de tarjeta encontrada por búsqueda */
         .track-card.found {
             border-color: var(--neon-cyan);
             box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
-            /* Pequeño efecto de escala al encontrar */
-            transform: scale(1.02); 
+            transform: scale(1.02);
         }
 
         .track-header {
@@ -345,7 +318,7 @@ html_code = """
             text-align: left;
         }
 
-        .track-metrics span:nth-child(4), /* Valores de la 2da fila */
+        .track-metrics span:nth-child(4),
         .track-metrics span:nth-child(5),
         .track-metrics span:nth-child(6) {
             color: var(--text-primary);
@@ -370,8 +343,7 @@ html_code = """
             left: 0;
             top: 0;
             height: 100%;
-            opacity: 0.4; /* Un poco más translúcido para el neón */
-            transition: width 0.5s ease-out;
+            opacity: 0.4;
         }
 
         .progress-fill.green { background: var(--neon-green); }
@@ -416,13 +388,11 @@ html_code = """
 <body>
 
     <div class="app-container">
-        <!-- Barra de estado superior (imita la del móvil) -->
         <div class="top-status-bar">
-            <span>9:26</span>
+            <span>9:28</span>
             <span>🛜 🔋 4G</span>
         </div>
 
-        <!-- Cabecera de la App -->
         <div class="header">
             <div class="user-info">
                 <div class="avatar">👤</div>
@@ -436,13 +406,11 @@ html_code = """
             </div>
         </div>
 
-        <!-- --- INGENIERÍA BUSCADOR: FORMULARIO FUNCIONAL --- -->
         <form class="search-form" id="search-form">
             <input type="text" class="search-input" id="search-input" placeholder="🔍 Buscar pista exacta (ej. Yastremska, NFL)..." autocomplete="off">
             <button type="submit" class="search-button" aria-label="Buscar">🔍</button>
         </form>
         
-        <!-- Feedback de búsqueda -->
         <div id="search-feedback"></div>
 
         <div class="tabs">
@@ -453,10 +421,7 @@ html_code = """
 
         <div class="section-title">🎵 PISTAS ACTIVAS (SWEET SPOT: 68% - 75%)</div>
 
-        <!-- Contenedor scrolleable -->
         <div class="tracks-wrapper" id="tracks-container">
-            
-            <!-- Pista 1 -->
             <div class="track-card" data-track-name="Dayana Yastremska WTA">
                 <div class="track-header"><div class="indicator green"></div> 1. Dayana Yastremska (WTA)</div>
                 <div class="track-metrics">
@@ -469,7 +434,6 @@ html_code = """
                 </div>
             </div>
 
-            <!-- Pista 2 -->
             <div class="track-card" data-track-name="Naoya Honda ATP">
                 <div class="track-header"><div class="indicator green"></div> 2. Naoya Honda (ATP)</div>
                 <div class="track-metrics">
@@ -482,7 +446,6 @@ html_code = """
                 </div>
             </div>
 
-            <!-- Pista 3 -->
             <div class="track-card" data-track-name="Julieta Pareja ITF">
                 <div class="track-header"><div class="indicator yellow"></div> 3. Julieta Pareja (ITF)</div>
                 <div class="track-metrics">
@@ -495,7 +458,6 @@ html_code = """
                 </div>
             </div>
 
-            <!-- Pista 4 -->
             <div class="track-card" data-track-name="SEA Seahawks NFL">
                 <div class="track-header"><div class="indicator green"></div> 4. SEA Seahawks (NFL)</div>
                 <div class="track-metrics">
@@ -508,7 +470,6 @@ html_code = """
                 </div>
             </div>
 
-            <!-- Pista 5 -->
             <div class="track-card" data-track-name="Combo ATP Beijing Medvedev Zverev">
                 <div class="track-header"><div class="indicator purple"></div> 5. Combo ATP Beijing</div>
                 <div class="track-metrics">
@@ -520,34 +481,8 @@ html_code = """
                     <span class="progress-text">75%</span>
                 </div>
             </div>
-            
-            <!-- Añadimos unas tarjetas más de ejemplo para probar el scroll -->
-            <div class="track-card" data-track-name="Daniil Medvedev ATP">
-                <div class="track-header"><div class="indicator green"></div> 6. Daniil Medvedev (ATP)</div>
-                <div class="track-metrics">
-                    <span>Probabilidad</span><span>Costo</span><span>Paga</span>
-                    <span>$0.00</span><span>$5.00</span><span>$8.90</span>
-                </div>
-                <div class="progress-bar-container">
-                    <div class="progress-fill green" style="width: 78%;"></div>
-                    <span class="progress-text">78%</span>
-                </div>
-            </div>
-             <div class="track-card" data-track-name="Aryna Sabalenka WTA">
-                <div class="track-header"><div class="indicator yellow"></div> 7. Aryna Sabalenka (WTA)</div>
-                <div class="track-metrics">
-                    <span>Probabilidad</span><span>Costo</span><span>Paga</span>
-                    <span>-Cato $.00</span><span>-$2.00</span><span>-$2.00</span>
-                </div>
-                <div class="progress-bar-container">
-                    <div class="progress-fill red" style="width: 70%;"></div>
-                    <span class="progress-text">70%</span>
-                </div>
-            </div>
+        </div>
 
-        </div> <!-- Fin tracks-wrapper -->
-
-        <!-- Menú Inferior de Estudio -->
         <footer class="footer-nav">
             <div class="footer-item"><span>≡</span> Menú</div>
             <div class="footer-item"><span>🔄</span> Sync</div>
@@ -556,11 +491,70 @@ html_code = """
         </footer>
     </div>
 
-    <!-- --- INGENIERÍA JAVASCRIPT: BÚSQUEDA INTERNA Y BLOQUEO GLOBAL --- -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const searchForm = document.getElementById('search-form');
             const searchInput = document.getElementById('search-input');
             const tracksContainer = document.getElementById('tracks-container');
             const trackCards = tracksContainer.querySelectorAll('.track-card');
-            const search
+            const searchFeedback = document.getElementById('search-feedback');
+
+            function performSearch() {
+                const query = searchInput.value.toLowerCase().trim();
+                let foundCount = 0;
+
+                trackCards.forEach(card => {
+                    const trackName = card.getAttribute('data-track-name').toLowerCase();
+                    if (trackName.includes(query)) {
+                        card.style.display = 'block';
+                        card.classList.add('found');
+                        foundCount++;
+                    } else {
+                        card.style.display = 'none';
+                        card.classList.remove('found');
+                    }
+                });
+
+                if (query === '') {
+                    searchFeedback.style.display = 'none';
+                    trackCards.forEach(card => card.style.display = 'block');
+                } else {
+                    searchFeedback.textContent = `🔍 ${foundCount} coincidencia${foundCount === 1 ? '' : 's'} para: "${query}"`;
+                    searchFeedback.style.display = 'block';
+                }
+                tracksContainer.scrollTop = 0;
+            }
+
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                performSearch();
+                searchInput.blur();
+            });
+
+            const appContainer = document.querySelector('.app-container');
+            ['copy', 'cut', 'paste'].forEach(event => {
+                appContainer.addEventListener(event, (e) => e.preventDefault());
+            });
+
+            appContainer.addEventListener('contextmenu', (e) => {
+                if (e.target !== searchInput) {
+                    e.preventDefault();
+                }
+            }, false);
+            
+            appContainer.addEventListener('selectstart', (e) => {
+                if (e.target !== searchInput) {
+                    e.preventDefault();
+                }
+            }, false);
+            
+            searchInput.addEventListener('focus', function() {
+                this.select();
+            });
+        });
+    </script>
+</body>
+</html>
+"""
+
+components.html(html_code, height=900, scrolling=False)
