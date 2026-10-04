@@ -1,3 +1,11 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+# Configuración de la página
+st.set_page_config(page_title="ZPS-100 Terminal", page_icon="🎛️", layout="centered")
+
+# Inyectando la interfaz exacta con HTML y CSS
+html_code = """
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -19,12 +27,13 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
             background-image: radial-gradient(circle at 50% 50%, #0d1b3e 0%, #050711 80%);
         }
 
         .phone-container {
-            width: 380px;
+            width: 100%;
+            max-width: 380px;
             background: #090e1f;
             border: 2px solid #00d2ff;
             border-radius: 40px;
@@ -111,9 +120,6 @@
             color: #94a3b8;
             font-size: 12px;
             margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .tabs {
@@ -171,7 +177,6 @@
         .indicator.green { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
         .indicator.yellow { background: #eab308; box-shadow: 0 0 6px #eab308; }
         .indicator.purple { background: #a855f7; box-shadow: 0 0 6px #a855f7; }
-        .indicator.red { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
 
         .track-metrics {
             display: grid;
@@ -236,24 +241,17 @@
             flex-direction: column;
             align-items: center;
             gap: 3px;
-            cursor: pointer;
-        }
-
-        .footer-item:hover {
-            color: #38bdf8;
         }
     </style>
 </head>
 <body>
 
     <div class="phone-container">
-        <!-- Barra superior móvil -->
         <div class="status-bar">
             <span>8:05</span>
             <span>📶 🛜 🔋 4G</span>
         </div>
 
-        <!-- Cabecera de la App -->
         <div class="header">
             <div class="user-info">
                 <div class="avatar">👤</div>
@@ -267,12 +265,10 @@
             </div>
         </div>
 
-        <!-- Buscador exacto -->
         <div class="search-box">
             🔍 Buscar pista exacta (ej. Yastremska, NFL)...
         </div>
 
-        <!-- Pestañas -->
         <div class="tabs">
             <span class="tab active">📊 ACTIVAS</span>
             <span class="tab">⏳ PENDIENTES</span>
@@ -281,11 +277,8 @@
 
         <div class="section-title">🎵 PISTAS ACTIVAS (SWEET SPOT: 68% - 75%)</div>
 
-        <!-- Pista 1 -->
         <div class="track-card">
-            <div class="track-header">
-                <div class="indicator green"></div> 1. Dayana Yastremska (WTA)
-            </div>
+            <div class="track-header"><div class="indicator green"></div> 1. Dayana Yastremska (WTA)</div>
             <div class="track-metrics">
                 <span>Probabilidad</span><span>Costo</span><span>Paga</span>
                 <span>$0.00</span><span>$2.00</span><span>$9.17</span>
@@ -296,11 +289,8 @@
             </div>
         </div>
 
-        <!-- Pista 2 -->
         <div class="track-card">
-            <div class="track-header">
-                <div class="indicator green"></div> 2. Naoya Honda (ATP)
-            </div>
+            <div class="track-header"><div class="indicator green"></div> 2. Naoya Honda (ATP)</div>
             <div class="track-metrics">
                 <span>Probabilidad</span><span>Costo</span><span>Paga</span>
                 <span>$0.00</span><span>$6.00</span><span>$8.17</span>
@@ -311,11 +301,8 @@
             </div>
         </div>
 
-        <!-- Pista 3 -->
         <div class="track-card">
-            <div class="track-header">
-                <div class="indicator yellow"></div> 3. Julieta Pareja (ITF)
-            </div>
+            <div class="track-header"><div class="indicator yellow"></div> 3. Julieta Pareja (ITF)</div>
             <div class="track-metrics">
                 <span>Probabilidad</span><span>Costo</span><span>Paga</span>
                 <span>-Cato $.00</span><span>-$1.19</span><span>-$1.19</span>
@@ -326,11 +313,8 @@
             </div>
         </div>
 
-        <!-- Pista 4 -->
         <div class="track-card">
-            <div class="track-header">
-                <div class="indicator green"></div> 4. SEA Seahawks (NFL)
-            </div>
+            <div class="track-header"><div class="indicator green"></div> 4. SEA Seahawks (NFL)</div>
             <div class="track-metrics">
                 <span>Probabilidad</span><span>Costo</span><span>Paga</span>
                 <span>-Cato $.00</span><span>$4.00</span><span>$9.41</span>
@@ -341,11 +325,8 @@
             </div>
         </div>
 
-        <!-- Pista 5 -->
         <div class="track-card">
-            <div class="track-header">
-                <div class="indicator purple"></div> 5. Combo ATP Beijing
-            </div>
+            <div class="track-header"><div class="indicator purple"></div> 5. Combo ATP Beijing</div>
             <div class="track-metrics">
                 <span>Probabilidad</span><span>Costo</span><span>Paga</span>
                 <span>-Cato $.00</span><span>$6.00</span><span>$7.12</span>
@@ -356,14 +337,17 @@
             </div>
         </div>
 
-        <!-- Menú Inferior -->
         <div class="footer-nav">
             <div class="footer-item"><span>≡</span> Menú</div>
             <div class="footer-item"><span>🔄</span> Sincronizar</div>
             <div class="footer-item"><span>➕</span> Nueva Pista</div>
-            <div class="footer-item"><span>⚙️</span> Ajustes</div>
+            <div class="footer-item"><span>⚙️️</span> Ajustes</div>
         </div>
     </div>
 
 </body>
 </html>
+"""
+
+# Renderizar en la app
+components.html(html_code, height=850, scrolling=True)
